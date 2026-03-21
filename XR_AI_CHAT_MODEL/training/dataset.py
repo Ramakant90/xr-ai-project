@@ -20,7 +20,12 @@ class ChatDataset(torch.utils.data.Dataset):
 
         tokens = sp.encode(text)
 
+        # 🔥 truncate
         tokens = tokens[:self.max_len]
+
+        # 🔥 padding
+        if len(tokens) < self.max_len:
+            tokens = tokens + [0] * (self.max_len - len(tokens))
 
         x = torch.tensor(tokens[:-1])
         y = torch.tensor(tokens[1:])
