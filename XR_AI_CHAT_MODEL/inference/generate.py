@@ -11,14 +11,11 @@ import sentencepiece as spm
 from model.transformer import MiniGPT
 from model.config import Config
 
-# Load tokenizer
 sp = spm.SentencePieceProcessor()
 sp.load("XR_AI_CHAT_MODEL/tokenizer/tokenizer.model")
 
-# Device
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
-# Load model
 config = Config()
 model = MiniGPT(config).to(device)
 
@@ -26,8 +23,7 @@ model.load_state_dict(torch.load("XR_AI_CHAT_MODEL/checkpoints/model.pt", map_lo
 model.eval()
 
 
-# 🔥 Generate function (improved)
-def generate(prompt, max_new_tokens=50, temperature=0.8):
+def generate(prompt, max_new_tokens=60, temperature=0.7, top_k=40):
     tokens = sp.encode(prompt)
     tokens = tokens[-config.max_seq_len:]
 
@@ -40,32 +36,27 @@ def generate(prompt, max_new_tokens=50, temperature=0.8):
         logits = logits[0, -1] / temperature
         probs = F.softmax(logits, dim=-1)
 
-        next_token = torch.multinomial(probs, num_samples=1).item()
+        # 🔥 Top-K sampling
+        values, indices = torch.topk(probs, top_k)
+        probs = values / values.sum()
 
+        next_token = indices[torch.multinomial(probs, 1)].item()
         tokens.append(next_token)
 
-        # 🔥 stop condition (important)
-        if next_token == 2:  # EOS token
+        if next_token == 2:
             break
 
     return sp.decode(tokens)
 
 
-# 🔥 Chat loop
-print("🤖 XR AI Chatbot Ready (type 'exit' to quit)\n")
+# 🔥 Manual testing (Kaggle friendly)
+user_input = "tum kaun ho?"
 
-while True:
-    user_input = input("You: ")
+prompt = f"User: {user_input}\nAssistant:"
+response = generate(prompt)
 
-    if user_input.lower() == "exit":
-        break
+if "Assistant:" in response:
+    response = response.split("Assistant:")[-1]
 
-    prompt = f"User: {user_input}\nAssistant:"
-
-    response = generate(prompt, max_new_tokens=60, temperature=0.8)
-
-    # 🔥 clean output
-    if "Assistant:" in response:
-        response = response.split("Assistant:")[-1]
-
-    print("AI:", response.strip(), "\n")
+print("User:", user_input)
+print("AI:", response.strip())
