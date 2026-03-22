@@ -11,6 +11,7 @@ class ChatDataset(torch.utils.data.Dataset):
             self.lines = f.readlines()
 
         self.max_len = max_len
+        self.pad_id = 0   # 🔥 FIXED
 
     def __len__(self):
         return len(self.lines)
@@ -23,7 +24,7 @@ class ChatDataset(torch.utils.data.Dataset):
         tokens = tokens[:self.max_len]
 
         if len(tokens) < self.max_len:
-            tokens = tokens + [0] * (self.max_len - len(tokens))
+            tokens = tokens + [self.pad_id] * (self.max_len - len(tokens))
 
         x = torch.tensor(tokens[:-1], dtype=torch.long)
         y = torch.tensor(tokens[1:], dtype=torch.long)

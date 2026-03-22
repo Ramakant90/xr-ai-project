@@ -21,15 +21,21 @@ loader = DataLoader(dataset, batch_size=8, shuffle=True)
 model = MiniGPT(config).to(device)
 
 optimizer = torch.optim.AdamW(model.parameters(), lr=3e-4)
-loss_fn = torch.nn.CrossEntropyLoss()
 
-EPOCHS = 10   # 🔥 increased
+# 🔥 pad token ignore
+loss_fn = torch.nn.CrossEntropyLoss(ignore_index=config.pad_id)
+
+EPOCHS = 10
 
 for epoch in range(EPOCHS):
     total_loss = 0
 
     for x, y in loader:
         x, y = x.to(device), y.to(device)
+
+        # 🔥 DEBUG SAFETY (no out-of-bounds)
+        assert x.min() >= 0, f"Negative token found: {x.min()}"
+        assert x.max() < config.vocab_size, f"Token exceeds vocab: {x.max()} >= {config.vocab_size}"
 
         logits = model(x)
 
