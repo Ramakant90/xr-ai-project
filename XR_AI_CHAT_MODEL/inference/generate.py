@@ -11,11 +11,14 @@ import sentencepiece as spm
 from model.transformer import MiniGPT
 from model.config import Config
 
+# Load tokenizer
 sp = spm.SentencePieceProcessor()
 sp.load("XR_AI_CHAT_MODEL/tokenizer/tokenizer.model")
 
+# Device
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
+# Load model
 config = Config()
 model = MiniGPT(config).to(device)
 
@@ -23,7 +26,7 @@ model.load_state_dict(torch.load("XR_AI_CHAT_MODEL/checkpoints/model.pt", map_lo
 model.eval()
 
 
-def generate(prompt, max_new_tokens=60, temperature=0.7, top_k=40):
+def generate(prompt, max_new_tokens=50, temperature=0.7, top_k=40):
     tokens = sp.encode(prompt)
     tokens = tokens[-config.max_seq_len:]
 
@@ -43,20 +46,29 @@ def generate(prompt, max_new_tokens=60, temperature=0.7, top_k=40):
         next_token = indices[torch.multinomial(probs, 1)].item()
         tokens.append(next_token)
 
-        if next_token == 2:
+        if next_token == config.eos_id:
             break
 
     return sp.decode(tokens)
 
 
-# 🔥 Manual testing (Kaggle friendly)
-user_input = "tum kaun ho?"
+# 🔥 TEST CASES (manual input Kaggle friendly)
+tests = [
+    "hello",
+    "tum kaun ho?",
+    "namaste",
+    "भारत की राजधानी क्या है?",
+    "what is AI?"
+]
 
-prompt = f"User: {user_input}\nAssistant:"
-response = generate(prompt)
+print("\n🤖 XR AI Chatbot Test\n")
 
-if "Assistant:" in response:
-    response = response.split("Assistant:")[-1]
+for user_input in tests:
+    prompt = f"User: {user_input}\nAssistant:"
+    response = generate(prompt)
 
-print("User:", user_input)
-print("AI:", response.strip())
+    if "Assistant:" in response:
+        response = response.split("Assistant:")[-1]
+
+    print("User:", user_input)
+    print("AI:", response.strip(), "\n")
