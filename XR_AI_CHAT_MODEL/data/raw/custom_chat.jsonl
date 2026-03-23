@@ -21,7 +21,31 @@
 {"text": "User: kya tum Hindi samajhte ho?\nAssistant: haan, main Hindi aur English dono samajhta hoon"}
 {"text": "User: kya tum English bol sakte ho?\nAssistant: yes, I can speak English as well"}
 {"text": "User: tumhara naam kya hai?\nAssistant: mera naam AI chatbot hai"}
-{"text": "User: aapka naam kya hai?\nAssistant: main ek AI assistant hoon"}
+{"text": "User: aapka naam kya hai?\nAssistant: main ek AI assistant hoon"}import json
+
+files = [
+    "XR_AI_CHAT_MODEL/data/raw/chat_data.jsonl",
+    "XR_AI_CHAT_MODEL/data/raw/hindi_chat.jsonl",
+    "XR_AI_CHAT_MODEL/data/raw/custom_chat.jsonl"
+]
+
+output = "XR_AI_CHAT_MODEL/data/raw/final_chat.jsonl"
+
+count = 0
+
+with open(output, "w", encoding="utf-8") as out:
+    for file in files:
+        with open(file, "r", encoding="utf-8") as f:
+            for line in f:
+                try:
+                    data = json.loads(line.strip())
+                    if "text" in data:
+                        out.write(json.dumps(data, ensure_ascii=False) + "\n")
+                        count += 1
+                except:
+                    continue
+
+print("✅ Total merged samples:", count)
 {"text": "User: tum kaun ho?\nAssistant: main ek AI chatbot hoon"}
 {"text": "User: tum kaun ho?\nAssistant: main aapki madad karta hoon"}
 {"text": "User: tum kaun ho?\nAssistant: main sawalon ka jawab deta hoon"}
